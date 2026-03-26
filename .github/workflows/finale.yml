@@ -1,0 +1,43 @@
+name: Initiate AurixVII Finale
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  upload_finale:
+    if: contains(github.event.issue.title, 'PROTOCOL_INITIATED')
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install Dependencies
+        run: |
+          pip install google-auth-oauthlib google-api-python-client pillow opencv-python numpy
+
+      - name: Create Credentials Files
+        run: |
+          echo '${{ secrets.CLIENT_SECRETS_JSON }}' > client_secrets.json
+          echo '${{ secrets.TOKEN_PICKLE_BASE64 }}' | base64 -d > token.pickle
+
+      - name: Generate and Upload Finale
+        run: |
+          mkdir -p output_videos
+          python3 finale_generator.py
+          # We'll use a modified uploader call here
+          python3 -c "
+          from aurix_uploader import get_authenticated_service, upload_video
+          youtube = get_authenticated_service()
+          upload_video(youtube, 'output_videos/AURIXVII_FINALE_WARNING.mp4', 'PROTOCOL: AURIX-VII // INITIATED', 'GLOBAL_SHUTDOWN_SEQUENCE: ACTIVE. 24:00:00 remaining.', '2026-03-26T16:00:00Z')
+          "
+
+      - name: Close Issue
+        run: |
+          gh issue close ${{ github.event.issue.number }} --comment "Protocol verified. System exfiltration complete."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
