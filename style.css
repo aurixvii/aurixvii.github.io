@@ -91,6 +91,10 @@ body {
 
 .error { color: #ff3333; }
 .success { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+.amber-shift { color: #ffb000; text-shadow: 0 0 10px #ffb000; }
+.amber-shift .prompt { color: #ffb000; }
+.amber-shift #command-input { color: #ffb000; }
+.amber-shift ::-webkit-scrollbar-thumb { background: #66460a; }
 .dim { color: #1a660a; }
 
 .initiate-btn {
