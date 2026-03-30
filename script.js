@@ -177,7 +177,12 @@ async function handleCommand(cmd) {
                 print("PROTOCOL_OBSIDIAN: UNLOCKED", 'success');
                 print("NEURAL_LATTICE_VISUALIZER: ONLINE", 'success');
                 print("---------------------------------");
-                print("ENTRY_POINT: /sys/core/neural_lattice/visualizer.html [SIMULATED]");
+                print("ENTRY_POINT: /sys/core/neural_lattice/visualizer.html");
+                print("INITIALIZING_VISUALIZER_STREAM...");
+                
+                setTimeout(() => {
+                    window.location.href = 'sys/core/neural_lattice/visualizer.html';
+                }, 2000);
             }, 2000);
         } else {
             print("ERROR: INVALID_LATTICE_KEY", 'error');
