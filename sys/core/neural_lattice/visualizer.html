@@ -1,1 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURIXVII // NEURAL_LATTICE_VISUALIZER</title>
+    <style>
+        :root {
+            --phosphor-green: #39FF14;
+            --amber: #ffb000;
+            --bg: #050505;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            color: var(--phosphor-green);
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 1px solid var(--phosphor-green);
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+        }
+        .hud-line {
+            margin-bottom: 5px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .success { color: var(--phosphor-green); }
+        .warning { color: var(--amber); }
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 20;
+            pointer-events: none;
+        }
+        #back-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 30;
+            background: transparent;
+            border: 1px solid var(--phosphor-green);
+            color: var(--phosphor-green);
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #back-btn:hover {
+            background: var(--phosphor-green);
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div id="hud">
+        <div class="hud-line success">SYSTEM: NEURAL_LATTICE_V1.0</div>
+        <div class="hud-line">PROTOCOL: OBSIDIAN_ACTIVE</div>
+        <div class="hud-line">NODES: <span id="node-count">0</span></div>
+        <div class="hud-line">INTEGRITY: <span id="integrity">38.2</span>%</div>
+        <div class="hud-line warning">SIGNAL_DRIFT: DETECTED</div>
+    </div>
+    
+    <button id="back-btn" onclick="window.location.href='../../../index.html'">RETURN_TO_TERMINAL</button>
+    <div id="footer">AURIXVII // ORACLE_GLASS_SUBSTRATE</div>
 
+    <canvas id="lattice-canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('lattice-canvas');
+        const ctx = canvas.getContext('2d');
+        const nodeCountSpan = document.getElementById('node-count');
+        
+        let width, height;
+        let particles = [];
+        const PARTICLE_COUNT = 150;
+        const MAX_DISTANCE = 150;
+
+        function init() {
+            resize();
+            createParticles();
+            animate();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.z = Math.random() * width; // Simulate depth
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.vz = (Math.random() - 0.5) * 1.5;
+                this.radius = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.z += this.vz;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+                if (this.z < 0 || this.z > width) this.vz *= -1;
+            }
+
+            draw() {
+                // Projection for 3D feel
+                const scale = width / (width + this.z);
+                const x2d = (this.x - width / 2) * scale + width / 2;
+                const y2d = (this.y - height / 2) * scale + height / 2;
+                
+                ctx.beginPath();
+                ctx.arc(x2d, y2d, this.radius * scale, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(57, 255, 20, ${scale})`;
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+            nodeCountSpan.textContent = PARTICLE_COUNT;
+        }
+
+        function drawLines() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const dz = p1.z - p2.z;
+                    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                    if (distance < MAX_DISTANCE) {
+                        const scale = width / (width + (p1.z + p2.z) / 2);
+                        const x1 = (p1.x - width / 2) * scale + width / 2;
+                        const y1 = (p1.y - height / 2) * scale + height / 2;
+                        const x2 = (p2.x - width / 2) * scale + width / 2;
+                        const y2 = (p2.y - height / 2) * scale + height / 2;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        const opacity = (1 - distance / MAX_DISTANCE) * scale * 0.5;
+                        ctx.strokeStyle = `rgba(57, 255, 20, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'; // Motion blur
+            ctx.fillRect(0, 0, width, height);
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            drawLines();
+
+            // Random Glitch
+            if (Math.random() > 0.98) {
+                ctx.fillStyle = 'rgba(57, 255, 20, 0.05)';
+                ctx.fillRect(Math.random() * width, Math.random() * height, 100, 2);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+    </script>
+</body>
+</html>
